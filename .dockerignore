@@ -1,0 +1,12 @@
+node_modules
+.git
+.env
+.env.*
+dist
+dev.db
+*.log
+debug_*.js
+test_*.sh
+uploads/*
+!uploads/.gitkeep
+.next
