@@ -1,0 +1,26 @@
+node_modules/
+# Keep environment variables out of version control
+.env
+.env.*
+!.env.example
+
+/src/generated/prisma
+
+# Build output
+dist/
+build/
+
+# Uploads (user content, temp files)
+uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

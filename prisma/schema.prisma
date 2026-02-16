@@ -1,0 +1,265 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("TEAM_MEMBER") // SUPERADMIN, ADMIN, TEAM_MEMBER
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     BlogPost[]
+
+  @@map("users")
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  firstName String
+  lastName  String
+  email     String
+  subject   String?
+  message   String
+  status    String   @default("UNREAD") // UNREAD, READ, ARCHIVED
+  visitorId String?  // For tracking chat sessions
+  sender    String   @default("USER") // USER, ADMIN
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
+}
+
+model BlogPost {
+  id              String    @id @default(uuid())
+  title           String
+  slug            String    @unique
+  excerpt         String?
+  content         String    // Sanitized HTML content
+  coverImage      String?
+  published       Boolean   @default(false)
+  viewCount       Int       @default(0)
+  // SEO Fields
+  metaTitle       String?   // Custom <title> (falls back to title)
+  metaDescription String?   // Custom <meta description>
+  metaKeywords    String[]  // Target keywords
+  canonicalUrl    String?   // Canonical URL override
+  ogImage         String?   // Open Graph image (falls back to coverImage)
+  structuredData  String?   // JSON-LD schema markup
+  // Content Organization
+  category        String?
+  tags            String[]
+  readTime        Int?      // Estimated read time in minutes
+  // Publishing Control
+  publishedAt     DateTime? // Scheduled publish date
+  featured        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  authorId        String
+  author          User      @relation(fields: [authorId], references: [id])
+
+  @@map("blog_posts")
+}
+
+model BotIntent {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  patterns     String[]
+  response     String
+  quickReplies String[]
+  priority     Int      @default(50)
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("bot_intents")
+}
+
+model Booking {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  countryCode String
+  phone       String
+  service     String
+  brief       String
+  agreedTerms Boolean  @default(true)
+  status      String   @default("NEW") // NEW, CONTACTED, CLOSED
+  createdAt   DateTime @default(now())
+
+  @@map("bookings")
+}
+
+model Testimonial {
+  id          String   @id @default(uuid())
+  name        String
+  role        String
+  company     String
+  avatar      String   @default("")
+  companyLogo String?
+  quote       String
+  rating      Int      @default(5)
+  featured    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("testimonials")
+}
+
+model Service {
+  id              String    @id @default(uuid())
+  title           String
+  slug            String    @unique
+  subtitle        String?
+  description     String
+  icon            String?
+  color           String    @default("blue")
+  coverImage      String?
+  published       Boolean   @default(false)
+  sortOrder       Int       @default(0)
+
+  // Content Sections (JSON for flexibility)
+  benefits        Json?     // string[]
+  technologies    Json?     // string[]
+  deliverables    Json?     // string[]
+  faq             Json?     // { q: string, a: string }[]
+
+  // Limited Offer
+  limitedOffer    Json?     // { badge, title, subtitle, price, currency, appTypes[], ctaText, active }
+
+  // Hero Section
+  heroHeadline    String?
+  heroSubheadline String?
+  heroCtaText     String?
+  heroCtaPrice    String?
+  heroUrgencyText String?
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String[]
+  canonicalUrl    String?
+  ogImage         String?
+  structuredData  String?
+
+  // Pricing
+  price           Float?
+  currency        String    @default("INR")
+  pricingType     String    @default("FIXED")
+  whatsappUrl     String?
+  demoImages      String[]  @default([])
+
+  // Stats & Comparison
+  stats           Json?     // { value: string, label: string }[]
+  comparison      Json?     // { struggles: string[], solutions: string[] }
+
+  hasDetailPage   Boolean   @default(false)
+  featured        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("services")
+}
+
+model Promotion {
+  id            String    @id @default(uuid())
+  title         String                         // e.g. "🚀 50% Off Web Development"
+  message       String                         // Short body text
+  serviceId     String?                        // Optional link to a Service
+  serviceSlug   String?                        // Denormalized for frontend redirect
+  serviceTitle  String?                        // Denormalized for display
+  whatsappUrl   String?                        // Direct WhatsApp CTA link
+  ctaText       String    @default("Get Offer") // Button label
+  badge         String?                        // e.g. "LIMITED TIME", "NEW"
+  active        Boolean   @default(true)
+  priority      Int       @default(0)          // Higher = shown first
+  startDate     DateTime  @default(now())
+  endDate       DateTime?                      // Null = no expiry
+  showOnPages   String[]  @default(["home", "services"]) // Which pages
+  impressions   Int       @default(0)
+  clicks        Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("promotions")
+}
+
+model AnalyticsSession {
+  id             String    @id @default(uuid())
+  visitorId      String                         // Anonymous fingerprint
+  startedAt      DateTime  @default(now())
+  lastActiveAt   DateTime  @default(now())
+  duration       Int       @default(0)          // Seconds
+  entryPage      String
+  exitPage       String?
+  referrer       String?
+  referrerDomain String?
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+  // Device & Browser
+  deviceType     String?                        // desktop, mobile, tablet
+  browser        String?
+  browserVersion String?
+  os             String?
+  osVersion      String?
+  screenWidth    Int?
+  screenHeight   Int?
+  language       String?
+  // Geo (from IP)
+  country        String?
+  countryCode    String?
+  city           String?
+  region         String?
+  latitude       Float?
+  longitude      Float?
+  timezone       String?
+  // Aggregates
+  pageViewCount  Int       @default(1)
+  bounced        Boolean   @default(true)
+
+  views          PageView[]
+
+  @@index([visitorId])
+  @@index([startedAt])
+  @@index([countryCode])
+  @@index([deviceType])
+  @@index([browser])
+  @@map("analytics_sessions")
+}
+
+model PageView {
+  id          String   @id @default(uuid())
+  sessionId   String
+  session     AnalyticsSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  path        String
+  title       String?
+  referrer    String?                            // Internal nav referrer
+  timeOnPage  Int?                               // Seconds
+  scrollDepth Int?                               // 0-100
+  timestamp   DateTime @default(now())
+
+  @@index([path])
+  @@index([timestamp])
+  @@index([sessionId])
+  @@map("page_views")
+}
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
