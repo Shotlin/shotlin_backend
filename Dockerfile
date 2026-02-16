@@ -26,7 +26,7 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 # Security: run as non-root + dumb-init for PID 1
-RUN apk add --no-cache dumb-init && \
+RUN apk add --no-cache dumb-init openssl && \
   addgroup -g 1001 -S shotlin && \
   adduser -S shotlin -u 1001 -G shotlin
 
