@@ -2,7 +2,7 @@
 
 BASE_URL="http://127.0.0.1:4000/api/v1"
 
-echo "🔍 Testing Shotlin Backend..."
+echo "🔍 Testing Shotlin Backend... ok"
 
 # 1. Check Health
 echo "\n1. Checking Server Health..."
