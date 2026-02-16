@@ -46,11 +46,15 @@ export async function loginHandler(
         { expiresIn: "1d" }
     );
 
+    // Clear any potential host-only cookie that might conflict with the domain cookie
+    reply.clearCookie('token', { path: '/' });
+
     reply.setCookie('token', token, {
         path: '/',
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
+        domain: process.env.COOKIE_DOMAIN,
         maxAge: 24 * 60 * 60, // 1 day
     });
 
@@ -98,6 +102,8 @@ export async function logoutHandler(
     request: FastifyRequest,
     reply: FastifyReply
 ) {
+    // Clear both domain-specific and host-only cookies to ensure complete cleanup
+    reply.clearCookie('token', { path: '/', domain: process.env.COOKIE_DOMAIN });
     reply.clearCookie('token', { path: '/' });
     return reply.send({ status: "success", message: "Logged out" });
 }
@@ -120,6 +126,7 @@ export async function meHandler(
         }
 
         if (!user.isActive) {
+            reply.clearCookie('token', { path: '/', domain: process.env.COOKIE_DOMAIN });
             reply.clearCookie('token', { path: '/' });
             return reply.code(403).send({ message: "Account has been deactivated" });
         }

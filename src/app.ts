@@ -36,7 +36,10 @@ server.register(prismaPlugin);
 
 // Security Plugins
 // Security Plugins
-server.register(helmet);
+server.register(helmet, {
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false,
+});
 server.register(import('@fastify/cookie'), {
   secret: process.env.JWT_SECRET, // Use the same secret for signing cookies
   hook: 'onRequest',
